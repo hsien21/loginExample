@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none    open-in-view: false  datasource:    url: jdbc:mysql://localhost:3306/springboot?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: root
+    password: root
+server:  port: 8083
+logging:  level:    root: INFO  file:    name: test.log
