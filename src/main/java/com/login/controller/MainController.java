@@ -1,18 +1,17 @@
 package com.login.controller;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.alibaba.fastjson.JSONObject;
+import com.login.entity.TUser;
 import com.login.service.TuserService;
-import com.login.util.AesEncryptUtils;
 import com.login.util.SecurityParameter;
 
 @RestController
@@ -23,29 +22,18 @@ public class MainController {
 	@Autowired
 	TuserService TuserService;
 
-	@Autowired
-	AesEncryptUtils aesEncryptUtils;
+	@Value("${eureka.instance.instance-id}")
+	private String instanceId;
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/test/tuser", method = RequestMethod.GET)
-	@SecurityParameter
-	public void test() throws Exception {
-		log.info("log Test start");
+	@SecurityParameter(encode = false)
+	public List<TUser> test() throws Exception {
+		log.info(instanceId);
 		System.out.println("All iteratorIterable item: ");
 
-		TuserService.tuserTest();
+		List<TUser> tuserList = TuserService.tuserTest();
 
-		Map map = new HashMap<String, String>();
-		map.put("key", "value");
-		map.put("中文", "汉字");
-		String content = JSONObject.toJSONString(map);
-		System.out.println("加密前：" + content);
-
-		String encrypt = aesEncryptUtils.encrypt(content);
-		System.out.println("加密后：" + encrypt);
-
-		String decrypt = aesEncryptUtils.decrypt(encrypt);
-		System.out.println("解密后：" + decrypt);
-
-//		return null;
+		return tuserList;
 	}
 }

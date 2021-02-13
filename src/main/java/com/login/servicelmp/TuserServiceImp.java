@@ -20,7 +20,7 @@ public class TuserServiceImp implements TuserService {
 	TUserRepository tUserRepository;
 
 	@Override
-	public TUser tuserTest() {
+	public List<TUser> tuserTest() {
 		// TODO Auto-generated method stub
 		List<TUser> testList = (List<TUser>) tUserRepository.findAll();
 		System.out.println(testList.size());
@@ -28,7 +28,8 @@ public class TuserServiceImp implements TuserService {
 		testList.forEach(item -> System.out.println(item.toString()));
 		Logger.info("TuserService");
 
-		return null;
+		return (List<TUser>) tUserRepository.findAll();
+
 	}
 
 }

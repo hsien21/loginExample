@@ -4,5 +4,18 @@ spring:
       ddl-auto: none    open-in-view: false  datasource:    url: jdbc:mysql://localhost:3306/springboot?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root
     password: root
-server:  port: 8083
+  application:    name: loginExample
+server:  port: 0
 logging:  level:    root: INFO  file:    name: test.log
+AES:
+  KEY: aaDJL2d9DfhLZO0z
+  IV: 412ADDSSFA342442
+eureka:  instance:    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}} # 隨機產生instance-id
+  client:    registry-fetch-interval-seconds: 10
+    healthcheck:
+      enabled: true # 开启健康检查（依赖spring-boot-starter-actuator）
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+      

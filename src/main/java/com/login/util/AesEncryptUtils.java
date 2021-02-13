@@ -1,63 +1,125 @@
 package com.login.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.stereotype.Component;
 
+import com.alibaba.fastjson.JSON;
+
 @Component
 public class AesEncryptUtils {
 
-	private static final String KEY = "1234567891234567";
+	private static String KEY = "aaDJL2d9DfhLZO0z";
+
+	private static String IV = "412ADDSSFA342442";
 	// 参数分别代表 算法名称/加密模式/数据填充方式
-	private static final String ALGORITHMSTR = "AES/ECB/PKCS5Padding";
+	private static final String CIPHER_ALGORITHM_CBC = "AES/CBC/NoPadding";
 
 	/**
-	 * 加密
+	 * 加密方法 返回base64加密字符串 和前端保持一致
 	 * 
-	 * @param content    加密的字符串
-	 * @param encryptKey key值
+	 * @param data 要加密的数据
+	 * @param key  加密key
+	 * @param iv   加密iv
+	 * @return 加密的结果
+	 * @throws Exception
+	 */
+	public static String encrypt(String data, String key, String iv) throws Exception {
+		try {
+			Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM_CBC);// "算法/模式/补码方式"NoPadding PKCS5Padding
+			int blockSize = cipher.getBlockSize();
+
+			byte[] dataBytes = data.getBytes();
+			int plaintextLength = dataBytes.length;
+			if (plaintextLength % blockSize != 0) {
+				plaintextLength = plaintextLength + (blockSize - (plaintextLength % blockSize));
+			}
+			byte[] plaintext = new byte[plaintextLength];
+			System.arraycopy(dataBytes, 0, plaintext, 0, dataBytes.length);
+
+			SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+			IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+			cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+			byte[] encrypted = cipher.doFinal(plaintext);
+
+			return new Base64().encodeToString(encrypted);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * 解密方法
+	 * 
+	 * @param data 要解密的数据
+	 * @param key  解密key
+	 * @param iv   解密iv
+	 * @return 解密的结果
+	 * @throws Exception
+	 */
+	public static String decrypt(String data, String key, String iv) throws Exception {
+		try {
+//	        byte[] encrypted1 = new Base64().decode(data);
+			Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM_CBC);
+			SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+			IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+			cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
+			byte[] original = cipher.doFinal(new Base64().decode(data));
+			String originalString = new String(original);
+			return originalString;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * 使用默认的key和iv加密
+	 * 
+	 * @param data
 	 * @return
 	 * @throws Exception
 	 */
-	public static String encrypt(String content, String encryptKey) throws Exception {
-		KeyGenerator kGenerator = KeyGenerator.getInstance("AES");
-		kGenerator.init(128);
-		Cipher cipher = Cipher.getInstance(ALGORITHMSTR);
-		cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(encryptKey.getBytes(), "AES"));
-		byte[] b = cipher.doFinal(content.getBytes("utf-8"));
-		// 采用base64算法进行转码,避免出现中文乱码
-		return Base64.encodeBase64String(b);
-
+	public static String encrypt(String data) throws Exception {
+		return encrypt(data, KEY, IV);
 	}
 
 	/**
-	 * 解密
+	 * 使用默认的key和iv解密
 	 * 
-	 * @param encryptStr 解密的字符串
-	 * @param decryptKey 解密的key值
+	 * @param data
 	 * @return
 	 * @throws Exception
 	 */
-	public static String decrypt(String encryptStr, String decryptKey) throws Exception {
-		KeyGenerator kgen = KeyGenerator.getInstance("AES");
-		kgen.init(128);
-		Cipher cipher = Cipher.getInstance(ALGORITHMSTR);
-		cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(decryptKey.getBytes(), "AES"));
-		// 采用base64算法进行转码,避免出现中文乱码
-		byte[] encryptBytes = Base64.decodeBase64(encryptStr);
-		byte[] decryptBytes = cipher.doFinal(encryptBytes);
-		return new String(decryptBytes);
+	public static String decrypt(String data) throws Exception {
+		return decrypt(data, KEY, IV);
 	}
 
-	public static String encrypt(String content) throws Exception {
-		return encrypt(content, KEY);
-	}
+	/**
+	 * 测试
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void main(String args[]) throws Exception {
+		Map map = new HashMap<>();
+		map.put("code", "0");
+		map.put("data", "3232dsfs");
+		String test1 = JSON.toJSONString(map);
+		String test = new String(test1.getBytes(), "UTF-8");
+		String data = null;
+		data = encrypt(test);
+		System.out.println("数据：" + test);
+		System.out.println("加密：" + data);
+		String jiemi = decrypt(data).trim();
+		System.out.println("解密：" + jiemi);
 
-	public static String decrypt(String encryptStr) throws Exception {
-		return decrypt(encryptStr, KEY);
 	}
 
 }

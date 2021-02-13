@@ -1,85 +1,113 @@
 package com.login.advice;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
-import com.login.util.RSAUtils;
+import com.login.util.AesEncryptUtils;
 import com.login.util.SecurityParameter;
 
-@ControllerAdvice(basePackages = "com.monkey.springboot.demo.controller")
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestControllerAdvice
 public class RsaDecodeRequestBodyAdvice implements RequestBodyAdvice {
-
-	private static final Logger logger = LoggerFactory.getLogger(RsaDecodeRequestBodyAdvice.class);
-
-	private static final String PRIVATE_KEY = "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIn2zWqU7K/2qm5pOpq5bp9R+3MTnStWTfJU9nC/Vo7UKH9dITPvrELCTK+qlqpx5Fes+l0GY7n6u4n4jyiw4ejsvkZYQ5ww477yLOn2FcoEGuZEwPgSCmfTST0OFUgQqn+/J11k9L92jEHyieE3qmhMkMt0UsVUSJwx/nZxo30ZAgMBAAECgYBD3YHigeuEC4R+14iaf8jo2j0kuGtB3Cxvnlez0otTqw1YyYkBsU49cLKkXvfKVEgM0Ow/QltgKvSBxCE31PrrDka5TygVMqqA/IM7NrDvjUcGLjyoeNmLA8660fWcDxUTlAGN5kxIvUATayVwKVflpWPWu0FPKsWrZustnEo+4QJBAMCmYsWqAKWYMVRXFP3/XGRfio8DV793TOckyBSN9eh8UhgoZyT3u7oeHmDJEwm4aNMHlg1Pcdc6tNsvi1FRCiUCQQC3VNzfF4xOtUgX7vWPL8YVljLuXmy12iVYmg6ofu9l31nwM9FLQ1TRFglvF5LWrIXTQb07PgGd5DJMAQWGsqLlAkAPE7Z9M73TN+L8b8hDzJ1leZi1cpSGdoa9PEKwYR/SrxAZtefEm+LEQSEtf+8OfrEtetWCeyo0pvKKiOEFXytFAkEAgynL/DC0yXsZYUYtmYvshHU5ayFTVagFICbYZeSrEo+BoUDxdI9vl0fU6A5NmBlGhaZ65G+waG5jLc1tTrlvoQJAXBEoPcBNAosiZHQfYBwHqU6mJ9/ZacJh3MtJzGGebfEwJgtln5b154iANqNWXpySBLvkK+Boq7FYRiD83pqmUg==";
 
 	@Override
 	public boolean supports(MethodParameter methodParameter, Type targetType,
 			Class<? extends HttpMessageConverter<?>> converterType) {
-		// TODO Auto-generated method stub
+		// 这里设置成false 它就不会再走这个类了
+		log.info("有執行");
 		return true;
 	}
 
 	@Override
-	public HttpInputMessage beforeBodyRead(HttpInputMessage inputMessage, MethodParameter methodParameter,
-			Type targetType, Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
-		// TODO Auto-generated method stub
+	public HttpInputMessage beforeBodyRead(HttpInputMessage inputMessage, MethodParameter parameter, Type targetType,
+			Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
+		StringBuilder stringBuilder = new StringBuilder();
+		BufferedReader bufferedReader = null;
 		try {
-			boolean encode = false;
-			if (methodParameter.getMethod().isAnnotationPresent(SecurityParameter.class)) {
-				// 获取注解配置的包含和去除字段
-				SecurityParameter serializedField = methodParameter.getMethodAnnotation(SecurityParameter.class);
-				// 入参是否需要解密
-				encode = serializedField.inDecode();
-			}
-			if (encode) {
-				logger.info("对方法method :【" + methodParameter.getMethod().getName() + "】返回数据进行解密");
-				return new MyHttpInputMessage(inputMessage);
+			// 这个request其实就是入参 可以从这里获取流
+			// 入参放在HttpInputMessage里面 这个方法的返回值也是HttpInputMessage
+			InputStream inputStream = inputMessage.getBody();
+			if (inputStream != null) {
+				bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+				char[] charBuffer = new char[128];
+				int bytesRead = -1;
+				while ((bytesRead = bufferedReader.read(charBuffer)) > 0) {
+					stringBuilder.append(charBuffer, 0, bytesRead);
+				}
 			} else {
-				return inputMessage;
+				stringBuilder.append("");
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("对方法method :【" + methodParameter.getMethod().getName() + "】返回数据进行解密出现异常：" + e.getMessage());
-			return inputMessage;
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (bufferedReader != null) {
+				try {
+					bufferedReader.close();
+				} catch (IOException e) {
+					throw e;
+				}
+			}
 		}
+		/**** 解密 */
+		boolean decode = false;
+		if (parameter.getMethod().isAnnotationPresent(SecurityParameter.class)) {
+			// 获取注解配置的包含和去除字段
+			SecurityParameter serializedField = parameter.getMethodAnnotation(SecurityParameter.class);
+			// 出参是否需要加密
+			decode = serializedField.decode();
+		}
+		if (decode) {
+			// 获取请求数据
+			String builderString = stringBuilder.toString();
+			log.info("【接受的请求数据】", builderString);
+			try {
+				String decodeString = AesEncryptUtils.decrypt(builderString);
+				log.info("【解密后的请求数据】", decodeString);
+				// 把数据放到我们封装的对象中
+				return new MyHttpInputMessage(inputMessage.getHeaders(),
+						new ByteArrayInputStream(decodeString.getBytes("UTF-8")));
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return null;
 
 	}
 
 	@Override
 	public Object afterBodyRead(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType,
 			Class<? extends HttpMessageConverter<?>> converterType) {
-		// TODO Auto-generated method stub
 		return body;
 	}
 
 	@Override
 	public Object handleEmptyBody(Object body, HttpInputMessage inputMessage, MethodParameter parameter,
 			Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
-		// TODO Auto-generated method stub
-		return null;
+		return body;
 	}
 
-	class MyHttpInputMessage implements HttpInputMessage {
-		private HttpHeaders headers;
-		private InputStream body;
+	// 这里实现了HttpInputMessage 封装一个自己的HttpInputMessage
+	static class MyHttpInputMessage implements HttpInputMessage {
+		HttpHeaders headers;
+		InputStream body;
 
-		public MyHttpInputMessage(HttpInputMessage inputMessage) throws Exception {
-			this.headers = inputMessage.getHeaders();
-			String content = easpString(IOUtils.toString(inputMessage.getBody(), "utf-8"));
-			this.body = IOUtils.toInputStream(RSAUtils.decryptDataOnJava(content, PRIVATE_KEY));
+		public MyHttpInputMessage(HttpHeaders headers, InputStream body) {
+			this.headers = headers;
+			this.body = body;
 		}
 
 		@Override
@@ -90,26 +118,6 @@ public class RsaDecodeRequestBodyAdvice implements RequestBodyAdvice {
 		@Override
 		public HttpHeaders getHeaders() {
 			return headers;
-		}
-
-		/**
-		 *
-		 * @param requestData
-		 * @return
-		 */
-		public String easpString(String requestData) {
-			if (requestData != null && !requestData.equals("")) {
-				String s = "{\"requestData\":";
-				if (!requestData.startsWith(s)) {
-					throw new RuntimeException("参数【requestData】缺失异常！");
-				} else {
-					int closeLen = requestData.length() - 1;
-					int openLen = "{\"requestData\":".length();
-					String substring = StringUtils.substring(requestData, openLen, closeLen);
-					return substring;
-				}
-			}
-			return "";
 		}
 	}
 

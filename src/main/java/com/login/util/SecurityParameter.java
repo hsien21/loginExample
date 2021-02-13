@@ -6,20 +6,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.web.bind.annotation.Mapping;
-
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-@Mapping
 @Documented
 public @interface SecurityParameter {
 	/**
-	 * 入参是否解密，默认解密
+	 * 是否加密 默认false 加密时传值为true
+	 * 
+	 * @return
 	 */
-	boolean inDecode() default true;
+
+	boolean encode() default false;
 
 	/**
-	 * 出参是否加密，默认加密
+	 * 是否解密 默认为false， 解密时传值为true
+	 * 
+	 * @return
 	 */
-	boolean outEncode() default true;
+	boolean decode() default false;
 }
