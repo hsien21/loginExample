@@ -10,13 +10,12 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "t_user")
-public class TUser {
+@Table(name = "useraccount")
+public class UserAccount {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private String name;
-	private int age;
-	private String type;
-
+	private String account;
+	private String password;
+	private String username;
 }

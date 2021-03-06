@@ -1,4 +1,4 @@
-package com.login.demo;
+package com.login;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,6 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
+//@EnableHystrix
+//@EnableHystrixDashboard
 @EntityScan("com.login.entity")
 @ComponentScan({ "com.login.controller,com.login.aspect,com.login.servicelmp,com.login.util,com.login.advice" })
 @EnableJpaRepositories("com.*.repository")

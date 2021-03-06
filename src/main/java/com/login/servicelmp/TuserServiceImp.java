@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.login.entity.TUser;
+import com.login.entity.UserAccount;
 import com.login.repository.TUserRepository;
 import com.login.service.TuserService;
 
@@ -30,6 +31,22 @@ public class TuserServiceImp implements TuserService {
 
 		return (List<TUser>) tUserRepository.findAll();
 
+	}
+
+	@Override
+	public Object getUserInfoByLoginName(String username) {
+		// TODO Auto-generated method stub
+		Object tUser = tUserRepository.findByTUserId("jack");
+		System.out.println(tUser.toString());
+		return tUser;
+	}
+
+	@Override
+	public Object getLoginUser(UserAccount userAccount) {
+		// TODO Auto-generated method stub
+		Object tuser = tUserRepository.findByUserAccount(userAccount.getAccount(), userAccount.getPassword());
+		System.out.println(tuser.toString());
+		return tuser;
 	}
 
 }
