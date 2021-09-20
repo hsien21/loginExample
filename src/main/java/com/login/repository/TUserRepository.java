@@ -11,6 +11,6 @@ public interface TUserRepository extends CrudRepository<TUser, Long> {
 	TUser findByTUserId(@Param("username") String username);
 
 	@Query(value = "select u from TUser u left join UserAccount account on u.name = account.username where account.account=:userAccount and account.password=:password")
-	Object findByUserAccount(@Param("userAccount") String userAccount, @Param("password") String password);
+	TUser findByUserAccount(@Param("userAccount") String userAccount, @Param("password") String password);
 
 }

@@ -1,8 +1,6 @@
 package com.login.controller;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,13 +12,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.login.entity.GetTokenRequest;
+import com.login.entity.Response;
 import com.login.entity.TUser;
-import com.login.entity.UserAccount;
 import com.login.service.TuserService;
 import com.login.util.JwtTokenUtil;
 import com.login.util.SecurityParameter;
 
 @RestController
+@RequestMapping(value = "/user")
 public class MainController {
 
 	private static final Logger log = LoggerFactory.getLogger(MainController.class);
@@ -59,23 +59,16 @@ public class MainController {
 	@SecurityParameter(encode = false)
 	public TUser LoginByGet(@RequestParam(name = "id") Long id) {
 
-		// TUser user1 = (TUser) TuserService.getUserInfoByLoginName(id);
+		log.info(jwtTokenUtil.getHttpToken());
 
 		return null;
 	}
 
 	@RequestMapping(value = "/getToken", method = RequestMethod.POST)
-	public Map<String, Object> token(@RequestBody UserAccount userAccount) {
-		TUser tuser = (TUser) TuserService.getLoginUser(userAccount);
-		log.info("getToken tuser:{}", tuser);
-		if (tuser != null) {
-			String token = jwtTokenUtil.createToken(tuser);
+	@SecurityParameter(encode = false)
+	public Response token(@RequestBody GetTokenRequest getTokenRequest) {
 
-			Map<String, Object> dataMap = new HashMap<String, Object>();
-			dataMap.put("token", token);
-			return dataMap;
-		}
-		return null;
+		return TuserService.getLoginUser(getTokenRequest);
 	}
 
 }

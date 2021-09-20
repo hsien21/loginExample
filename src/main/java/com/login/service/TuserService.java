@@ -2,8 +2,9 @@ package com.login.service;
 
 import java.util.List;
 
+import com.login.entity.GetTokenRequest;
+import com.login.entity.Response;
 import com.login.entity.TUser;
-import com.login.entity.UserAccount;
 
 public interface TuserService {
 
@@ -11,6 +12,6 @@ public interface TuserService {
 
 	public Object getUserInfoByLoginName(String username);
 
-	Object getLoginUser(UserAccount userAccount);
+	Response getLoginUser(GetTokenRequest getTokenRequest);
 
 }

@@ -1,16 +1,20 @@
 package com.login.servicelmp;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.login.entity.GetTokenRequest;
+import com.login.entity.Response;
 import com.login.entity.TUser;
-import com.login.entity.UserAccount;
 import com.login.repository.TUserRepository;
 import com.login.service.TuserService;
+import com.login.util.JwtTokenUtil;
 
 @Service
 public class TuserServiceImp implements TuserService {
@@ -19,6 +23,8 @@ public class TuserServiceImp implements TuserService {
 
 	@Autowired
 	TUserRepository tUserRepository;
+	@Autowired
+	JwtTokenUtil JwtTokenUtil;
 
 	@Override
 	public List<TUser> tuserTest() {
@@ -42,11 +48,19 @@ public class TuserServiceImp implements TuserService {
 	}
 
 	@Override
-	public Object getLoginUser(UserAccount userAccount) {
-		// TODO Auto-generated method stub
-		Object tuser = tUserRepository.findByUserAccount(userAccount.getAccount(), userAccount.getPassword());
-		System.out.println(tuser.toString());
-		return tuser;
+	public Response getLoginUser(GetTokenRequest getTokenRequest) {
+		Response response = new Response();
+		String jwtTokenString = null;
+		TUser tuser = tUserRepository.findByUserAccount(getTokenRequest.getAccount(), getTokenRequest.getPassword());
+		if (tuser != null) {
+			jwtTokenString = JwtTokenUtil.createToken(tuser.getId());
+			Map<String, Object> userResponse = new HashMap();
+			userResponse.put("jwtToken", jwtTokenString);
+			userResponse.put("usrImfo", tuser);
+			response.setResult(userResponse);
+		}
+
+		return response;
 	}
 
 }

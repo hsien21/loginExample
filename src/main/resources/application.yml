@@ -1,12 +1,17 @@
 spring:
+  cache:    type: redis
   jpa:
     hibernate:
       ddl-auto: none    open-in-view: false  datasource:    url: jdbc:mysql://localhost:3306/springboot?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root
     password: root
-  application:    name: loginExample
+  application:    name: loginExample  redis:    host: 127.0.0.1
+    port: 6379
+    
 server:  port: 8088
 logging:  level:    root: INFO  file:    name: test.log
+
+    
 AES:
   KEY: aaDJL2d9DfhLZO0z
   IV: 412ADDSSFA342442
@@ -31,5 +36,7 @@ jwt:
   ignores:
     - /getToken
     - /static/**
+    
+
 
       

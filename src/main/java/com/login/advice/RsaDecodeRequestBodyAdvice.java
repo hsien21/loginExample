@@ -111,6 +111,7 @@ public class RsaDecodeRequestBodyAdvice implements RequestBodyAdvice {
 			String data = IOUtils.toString(inputMessage.getBody(), "UTF-8");
 			JSONObject json = JSONObject.parseObject(data);
 			log.info("data:{}", data);
+			log.info("IOUtils.toInputStream:{}", IOUtils.toInputStream(data, "UTF-8"));
 			this.body = IOUtils.toInputStream(data, "UTF-8");
 			this.headers = inputMessage.getHeaders();
 

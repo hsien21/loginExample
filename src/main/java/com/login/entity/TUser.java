@@ -7,10 +7,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import lombok.Data;
+import lombok.ToString;
 
 @Entity
 @Data
 @Table(name = "t_user")
+@ToString
 public class TUser {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

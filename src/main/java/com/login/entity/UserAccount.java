@@ -18,4 +18,11 @@ public class UserAccount {
 	private String account;
 	private String password;
 	private String username;
+
+	@Override
+	public String toString() {
+		return "UserAccount [id=" + id + ", account=" + account + ", password=" + password + ", username=" + username
+				+ "]";
+	}
+
 }
